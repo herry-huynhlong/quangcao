@@ -27,6 +27,7 @@ services:
       retries: 10
 
   api:
+    image: ${QAVIO_ADS_API_IMAGE:-ghcr.io/herry-huynhlong/qavio-ads-api:latest}
     build:
       context: .
       dockerfile: infrastructure/api.Dockerfile
@@ -46,6 +47,7 @@ services:
       - "127.0.0.1:3201:4000"
 
   web:
+    image: ${QAVIO_ADS_WEB_IMAGE:-ghcr.io/herry-huynhlong/qavio-ads-web:latest}
     build:
       context: .
       dockerfile: infrastructure/web.Dockerfile
