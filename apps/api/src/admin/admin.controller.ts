@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { SessionGuard } from '../common/session.guard';
 import { RolesGuard } from '../common/roles.guard';
@@ -19,4 +19,6 @@ export class AdminController {
   @Get('organizations') organizations() { return this.admin.organizations(); }
   @Get('organizations/:id') organization(@Param('id') id: string) { return this.admin.organization(id); }
   @Get('audit') audit() { return this.admin.audit(); }
+  @Get('fees') fees() { return this.admin.fees(); }
+  @Post('fees/platform') @UseGuards(SameOriginGuard) fee(@CurrentUser() user: AuthenticatedUser,@Body() body:{percentage:number}) { return this.admin.setPlatformFee(user.id,body.percentage); }
 }
