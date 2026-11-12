@@ -9,6 +9,12 @@ export class EmailService {
     const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: process.env.EMAIL_FROM, to: email, subject: 'Xác minh tài khoản QAVIO Ads', html: `<p>Nhấn vào liên kết để xác minh tài khoản: <a href="${link}">Xác minh email</a></p>` }) });
     if (!response.ok) throw new ServiceUnavailableException('Không thể gửi email xác minh. Vui lòng thử lại sau.');
   }
+  async sendAdminInvite(email: string, token: string) {
+    if (!this.configured) throw new ServiceUnavailableException('Không thể gửi lời mời quản trị vì email chưa được cấu hình.');
+    const link = `${process.env.WEB_ORIGIN}/admin/activate?token=${encodeURIComponent(token)}`;
+    const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: process.env.EMAIL_FROM, to: email, subject: 'Kích hoạt Super Admin QAVIO Ads', html: `<p>Lời mời này chỉ dùng một lần và hết hạn sau 24 giờ.</p><p><a href="${link}">Kích hoạt Super Admin</a></p>` }) });
+    if (!response.ok) throw new ServiceUnavailableException('Không thể gửi lời mời quản trị. Vui lòng kiểm tra email provider.');
+  }
   async sendPasswordReset(email: string, token: string) {
     if (!this.configured) throw new ServiceUnavailableException('Đặt lại mật khẩu chưa được cấu hình email.');
     const link = `${process.env.WEB_ORIGIN}/reset-password?token=${encodeURIComponent(token)}`;

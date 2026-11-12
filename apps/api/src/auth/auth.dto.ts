@@ -23,3 +23,8 @@ export class ResetPasswordDto extends TokenDto {
   password!: string;
 }
 export class CreateOrganizationDto { @IsString() @Length(2,120) name!: string; @IsString() @Length(2,160) legalName?: string; @IsString() @Matches(/^[0-9A-Za-z-]*$/) taxId?: string; }
+export class AdminBootstrapTokenDto { @IsString() @Length(20, 256) token!: string; }
+export class CompleteAdminBootstrapDto extends AdminBootstrapTokenDto {
+  @IsString() @Length(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, { message: PASSWORD_POLICY_MESSAGE }) @Matches(/[a-z]/, { message: PASSWORD_POLICY_MESSAGE }) @Matches(/[A-Z]/, { message: PASSWORD_POLICY_MESSAGE }) @Matches(/\d/, { message: PASSWORD_POLICY_MESSAGE }) password!: string;
+  @IsString() @Length(6, 6) mfaCode!: string;
+}

@@ -4,7 +4,7 @@
     "dev": "nest start --watch", "build": "nest build", "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\" --no-error-on-unmatched-pattern", "typecheck": "tsc --noEmit",
     "test": "jest --runInBand", "test:e2e": "jest --config test/jest-e2e.json --runInBand",
-    "db:migrate": "tsx src/database/migrate.ts"
+    "db:migrate": "tsx src/database/migrate.ts", "admin:bootstrap": "tsx src/scripts/provision-super-admin.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.11", "@nestjs/core": "^11.1.11", "@nestjs/platform-fastify": "^11.1.11",
