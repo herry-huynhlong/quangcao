@@ -10,4 +10,4 @@ import { AuthService } from './auth.service'; import { AdminBootstrapTokenDto, C
  @Post('mfa/setup') @UseGuards(SessionGuard,SameOriginGuard) setupMfa(@CurrentUser() user:AuthenticatedUser){return this.auth.beginMfa(user.id)}
  @Post('mfa/confirm') @UseGuards(SessionGuard,SameOriginGuard) confirmMfa(@CurrentUser() user:AuthenticatedUser,@Body() dto:MfaConfirmDto){return this.auth.confirmMfa(user.id,dto.code)}
  @Post('admin-bootstrap/begin') beginAdminBootstrap(@Body() dto:AdminBootstrapTokenDto){return this.auth.beginAdminActivation(dto.token)}
- @Post('admin-bootstrap/complete') completeAdminBootstrap(@Body() dto:CompleteAdminBootstrapDto){return this.auth.completeAdminActivation(dto.token,dto.password,dto.mfaCode)} }
+ @Post('admin-bootstrap/complete') completeAdminBootstrap(@Body() dto:CompleteAdminBootstrapDto){return this.auth.completeAdminActivation(dto.token,dto.password)} }
