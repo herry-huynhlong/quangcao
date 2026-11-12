@@ -1,0 +1,11 @@
+import { Body, Controller, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common'; import { FastifyReply, FastifyRequest } from 'fastify';
+import { AuthService } from './auth.service'; import { EmailDto, LoginDto, MfaConfirmDto, RegisterDto, ResetPasswordDto, TokenDto } from './auth.dto'; import { CurrentUser } from '../common/auth.decorator'; import { AuthenticatedUser } from '../common/authenticated-user'; import { SessionGuard } from '../common/session.guard'; import { SameOriginGuard } from '../common/same-origin.guard';
+@Controller('v1/auth') export class AuthController { constructor(private auth:AuthService) {} private cookie(reply:FastifyReply,token:string){ reply.setCookie(process.env.SESSION_COOKIE_NAME??'qavio_ads_session',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:Number(process.env.SESSION_TTL_DAYS??14)*86400}); }
+ @Post('register') async register(@Body() dto:RegisterDto){return this.auth.register(dto.email,dto.password)}
+ @Post('verify-email') async verify(@Body() dto:TokenDto){return this.auth.verifyEmail(dto.token)}
+ @Post('login') @HttpCode(200) async login(@Body() dto:LoginDto,@Req() req:FastifyRequest,@Res({passthrough:true}) reply:FastifyReply){const result=await this.auth.login(dto.email,dto.password,dto.mfaCode,req.ip,req.headers['user-agent']);this.cookie(reply,result.token);return {message:'Đăng nhập thành công'};}
+ @Post('logout') @UseGuards(SessionGuard,SameOriginGuard) @HttpCode(204) async logout(@CurrentUser() user:AuthenticatedUser,@Res({passthrough:true}) reply:FastifyReply){await this.auth.logout(user.sessionId);reply.clearCookie(process.env.SESSION_COOKIE_NAME??'qavio_ads_session',{path:'/'});}
+ @Post('forgot-password') @HttpCode(202) async forgot(@Body() dto:EmailDto){return this.auth.requestReset(dto.email)}
+ @Post('reset-password') async reset(@Body() dto:ResetPasswordDto){return this.auth.resetPassword(dto.token,dto.password)}
+ @Post('mfa/setup') @UseGuards(SessionGuard,SameOriginGuard) setupMfa(@CurrentUser() user:AuthenticatedUser){return this.auth.beginMfa(user.id)}
+ @Post('mfa/confirm') @UseGuards(SessionGuard,SameOriginGuard) confirmMfa(@CurrentUser() user:AuthenticatedUser,@Body() dto:MfaConfirmDto){return this.auth.confirmMfa(user.id,dto.code)} }

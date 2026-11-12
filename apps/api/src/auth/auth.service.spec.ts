@@ -1,0 +1,2 @@
+import { BadRequestException } from '@nestjs/common'; import { AuthService } from './auth.service';
+describe('AuthService password policy',()=>{const service=new AuthService({} as never,{} as never); it('rejects passwords without all required classes',()=>expect(()=> (service as never as {assertPassword:(v:string)=>void}).assertPassword('lowercasepassword1')).toThrow(BadRequestException)); it('accepts a strong password',()=>expect(()=> (service as never as {assertPassword:(v:string)=>void}).assertPassword('ValidPassword2026')).not.toThrow());});

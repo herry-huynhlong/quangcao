@@ -1,0 +1,2 @@
+const apiOrigin = process.env.NEXT_PUBLIC_API_ORIGIN ?? 'http://localhost:4000/api';
+export async function api<T>(path:string, options:RequestInit={}) : Promise<T> { const response=await fetch(`${apiOrigin}${path}`,{...options,credentials:'include',headers:{'Content-Type':'application/json',...(options.headers??{})}}); if(!response.ok){const body=await response.json().catch(()=>null);throw new Error(body?.message?.[0]??body?.message??'Không thể hoàn tất yêu cầu.');} if(response.status===204)return undefined as T;return response.json() as Promise<T>; }

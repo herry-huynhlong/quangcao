@@ -1,0 +1,2 @@
+import { Module } from '@nestjs/common'; import { DatabaseModule } from './database/database.module'; import { AuthModule } from './auth/auth.module'; import { OrganizationsModule } from './organizations/organizations.module'; import { HealthController } from './health/health.controller'; import { OpenApiController } from './openapi.controller';
+@Module({imports:[DatabaseModule,AuthModule,OrganizationsModule],controllers:[HealthController,OpenApiController]}) export class AppModule {}
