@@ -8,6 +8,7 @@ import { SameOriginGuard } from '../common/same-origin.guard';
 import { CurrentUser } from '../common/auth.decorator';
 import { AuthenticatedUser } from '../common/authenticated-user';
 class PlatformFeeDto { @IsNumber() @Min(5) @Max(50) percentage!: number; @IsOptional() @IsString() scopeType?: string; @IsOptional() @IsString() scopeKey?: string; }
+class ProviderConfigDto { @IsString() provider!: string; @IsOptional() @IsString() clientId?: string; @IsOptional() @IsString() clientSecret?: string; @IsOptional() @IsString() apiVersion?: string; }
 class PageQuery { @IsOptional() @IsString() search?: string; @IsOptional() @IsString() status?: string; @IsOptional() @IsString() action?: string; @IsOptional() @IsString() page?: string; @IsOptional() @IsString() limit?: string; }
 @Controller('v1/admin') @UseGuards(SessionGuard, RolesGuard) @Roles('SUPER_ADMIN')
 export class AdminController {
@@ -24,6 +25,8 @@ export class AdminController {
   @Post('sessions/:id/revoke') @UseGuards(SameOriginGuard) revoke(@CurrentUser() u:AuthenticatedUser,@Param('id') id:string){ return this.admin.revokeSession(u.id,u.sessionId,id); }
   @Get('security') security(){ return this.admin.security(); }
   @Get('integrations') integrations(){ return this.admin.integrations(); }
+  @Get('integrations/:provider') integration(@Param('provider') provider:string){ return this.admin.integration(provider); }
+  @Post('integrations/configure') @UseGuards(SameOriginGuard) configureIntegration(@CurrentUser() u:AuthenticatedUser,@Body() b:ProviderConfigDto){ return this.admin.configureIntegration(u.id,b); }
   @Get('fees') fees(){ return this.admin.fees(); }
   @Post('fees/platform') @UseGuards(SameOriginGuard) fee(@CurrentUser() u:AuthenticatedUser,@Body() b:PlatformFeeDto){ return this.admin.setFeePolicy(u.id,b.percentage,b.scopeType,b.scopeKey); }
 }
