@@ -7,7 +7,7 @@ import { Roles } from '../common/roles.decorator';
 import { SameOriginGuard } from '../common/same-origin.guard';
 import { CurrentUser } from '../common/auth.decorator';
 import { AuthenticatedUser } from '../common/authenticated-user';
-class PlatformFeeDto { @IsNumber() @Min(5) @Max(50) percentage!: number; }
+class PlatformFeeDto { @IsNumber() @Min(5) @Max(50) percentage!: number; @IsOptional() @IsString() scopeType?: string; @IsOptional() @IsString() scopeKey?: string; }
 class PageQuery { @IsOptional() @IsString() search?: string; @IsOptional() @IsString() status?: string; @IsOptional() @IsString() action?: string; @IsOptional() @IsString() page?: string; @IsOptional() @IsString() limit?: string; }
 @Controller('v1/admin') @UseGuards(SessionGuard, RolesGuard) @Roles('SUPER_ADMIN')
 export class AdminController {
@@ -25,5 +25,5 @@ export class AdminController {
   @Get('security') security(){ return this.admin.security(); }
   @Get('integrations') integrations(){ return this.admin.integrations(); }
   @Get('fees') fees(){ return this.admin.fees(); }
-  @Post('fees/platform') @UseGuards(SameOriginGuard) fee(@CurrentUser() u:AuthenticatedUser,@Body() b:PlatformFeeDto){ return this.admin.setPlatformFee(u.id,b.percentage); }
+  @Post('fees/platform') @UseGuards(SameOriginGuard) fee(@CurrentUser() u:AuthenticatedUser,@Body() b:PlatformFeeDto){ return this.admin.setFeePolicy(u.id,b.percentage,b.scopeType,b.scopeKey); }
 }
