@@ -1,3 +1,19 @@
 packages:
   - apps/*
   - packages/*
+
+# pnpm 11 executes dependency lifecycle scripts only for explicitly reviewed packages.
+# These packages are pinned with integrity hashes in pnpm-lock.yaml:
+# - argon2: required by the API for Argon2id password hashing.
+# - esbuild: installs the platform binary used by Next.js, Nest tooling and tsx.
+# - @parcel/watcher: optional native file watcher used by Jest's haste map.
+allowBuilds:
+  '@parcel/watcher': true
+  argon2: true
+  esbuild: true
+
+# Keep peer dependency failures visible and use the workspace-level setting names
+# required by pnpm 11 (rather than legacy .npmrc settings).
+nodeLinker: hoisted
+strictPeerDependencies: true
+strictDepBuilds: true
