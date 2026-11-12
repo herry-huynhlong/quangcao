@@ -2,6 +2,7 @@ import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 @Injectable()
 export class EmailService {
   private get configured() { return process.env.EMAIL_PROVIDER === 'resend' && Boolean(process.env.RESEND_API_KEY) && Boolean(process.env.EMAIL_FROM); }
+  get verificationConfigured() { return this.configured; }
   async sendVerification(email: string, token: string) {
     if (!this.configured) throw new ServiceUnavailableException('Xác minh email chưa được cấu hình. Quản trị viên cần cấp nhà cung cấp email hợp lệ.');
     const link = `${process.env.WEB_ORIGIN}/verify-email?token=${encodeURIComponent(token)}`;

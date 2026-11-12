@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2'; import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'node:crypto';
 import { DatabaseService } from '../database/database.service'; import { EmailService } from './email.service';
+import { assertPasswordPolicy } from './password-policy';
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 const newToken = () => randomBytes(32).toString('base64url');
 const base32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -10,11 +11,12 @@ const totp = (secret:string, time=Math.floor(Date.now()/1000/30)) => { const cou
 @Injectable()
 export class AuthService {
   constructor(private readonly db: DatabaseService, private readonly email: EmailService) {}
-  private assertPassword(password: string) { if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) throw new BadRequestException('Mật khẩu cần có chữ hoa, chữ thường và chữ số.'); }
+  private assertPassword(password: string) { assertPasswordPolicy(password); }
   private async throttle(key: string, limit = 5) { const count = await this.db.query<{count:string}>(`SELECT count(*) FROM rate_limit_events WHERE key=$1 AND created_at > now() - interval '15 minutes'`,[key]); if (Number(count.rows[0].count) >= limit) throw new UnauthorizedException('Quá nhiều lần thử. Vui lòng thử lại sau 15 phút.'); await this.db.query('INSERT INTO rate_limit_events(key) VALUES($1)',[key]); }
   async register(emailInput: string, password: string) {
-    if (process.env.EMAIL_PROVIDER !== 'resend' || !process.env.RESEND_API_KEY) throw new ServiceUnavailableException('Đăng ký chưa mở: dịch vụ email xác minh chưa được cấu hình hợp lệ.');
-    this.assertPassword(password); const email = emailInput.trim().toLowerCase(); const verification = newToken(); const passwordHash = await argon2.hash(password,{ type:argon2.argon2id, memoryCost:19456, timeCost:2, parallelism:1 });
+    this.assertPassword(password);
+    if (!this.email.verificationConfigured) throw new ServiceUnavailableException('Đăng ký chưa mở vì dịch vụ email xác minh chưa được cấu hình hợp lệ.');
+    const email = emailInput.trim().toLowerCase(); const verification = newToken(); const passwordHash = await argon2.hash(password,{ type:argon2.argon2id, memoryCost:19456, timeCost:2, parallelism:1 });
     let userId: string;
     try { const result = await this.db.transaction(async c => { const user=await c.query<{id:string}>('INSERT INTO users(email,password_hash) VALUES($1,$2) RETURNING id',[email,passwordHash]); await c.query(`INSERT INTO email_verification_tokens(user_id,token_hash,expires_at) VALUES($1,$2,now()+interval '24 hours')`,[user.rows[0].id,hashToken(verification)]); await c.query(`INSERT INTO audit_logs(actor_type,actor_id,action,entity) VALUES('USER',$1,'AUTH_REGISTERED','user')`,[user.rows[0].id]); return user.rows[0].id; }); userId=result; } catch (e: unknown) { if ((e as {code?:string}).code==='23505') throw new ConflictException('Email này đã được đăng ký.'); throw e; }
     try { await this.email.sendVerification(email,verification); } catch (e) { await this.db.query('DELETE FROM users WHERE id=$1',[userId]); throw e; }
