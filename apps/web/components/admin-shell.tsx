@@ -1,0 +1,8 @@
+'use client';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { api } from '../lib/api';
+
+const items = [['Dashboard','/admin'],['Người dùng','/admin/users'],['Tổ chức','/admin/organizations'],['Nhật ký hoạt động','/admin/audit'],['Tích hợp API','/admin/integrations'],['Cấu hình phí','/admin/finance/fees'],['Cấu hình nền tảng','/admin/settings']];
+export function AdminShell({ children }: { children: React.ReactNode }) { const [collapsed,setCollapsed]=useState(false); const path=usePathname(); const router=useRouter(); async function logout(){try{await api('/v1/auth/logout',{method:'POST'});}finally{router.replace('/login');}} return <div className="shell"><aside className={`sidebar ${collapsed?'collapsed':''}`}><div className="brand"><span className="brand-mark">Q</span>{!collapsed&&<span>QAVIO <b style={{color:'#b5811d'}}>Admin</b></span>}</div><div className="side-label">ĐIỀU HÀNH NỀN TẢNG</div>{items.map(([label,href])=><Link key={href} className={`nav-item ${path===href?'active':''}`} href={href}>{collapsed?'•':label}</Link>)}<div className="side-label">ĐANG KHÓA</div><span className="nav-item disabled">{collapsed?'•':'Quảng cáo & tài chính'}</span></aside><main className="app-main"><header className="topbar"><button className="hamburger" onClick={()=>setCollapsed(!collapsed)} aria-label="Thu gọn menu">☰</button><span className="muted">QAVIO Ads · Super Admin</span><button style={{marginLeft:'auto'}} className="button secondary" onClick={logout}>Đăng xuất</button></header>{children}</main></div>; }
