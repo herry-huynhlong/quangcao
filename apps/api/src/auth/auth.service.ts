@@ -64,7 +64,7 @@ export class AuthService {
       for (const recoveryCode of recoveryCodes) await c.query('INSERT INTO mfa_recovery_codes(user_id,code_hash) VALUES($1,$2)', [user.rows[0].id, hashToken(recoveryCode)]);
       await c.query('UPDATE admin_invites SET consumed_at=now() WHERE id=$1', [row.id]);
       await c.query('UPDATE admin_bootstrap SET locked_at=now(),locked_by_user_id=$1,pending_email=NULL,pending_invite_id=NULL,updated_at=now() WHERE id=true', [user.rows[0].id]);
-      await c.query(`INSERT INTO audit_logs(actor_type,actor_id,action,entity,entity_id) VALUES('USER',$1,'SUPER_ADMIN_BOOTSTRAP_COMPLETED','user',$1)`, [user.rows[0].id]);
+      await c.query(`INSERT INTO audit_logs(actor_type,actor_id,action,entity,entity_id) VALUES('USER',$1,'SUPER_ADMIN_BOOTSTRAP_COMPLETED','user',$2)`, [user.rows[0].id, user.rows[0].id]);
       return { message: 'Super Admin đã được kích hoạt. Hãy đăng nhập bằng mật khẩu mới.', recoveryCodes: [] as string[] };
     });
   }
