@@ -13,10 +13,10 @@ const criticalStyles = `:root{--ink:#1f2937;--muted:#718096;--paper:#fff;--canva
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi">
-      <head>
+      <body>
         <style dangerouslySetInnerHTML={{ __html: criticalStyles }} />
-      </head>
-      <body>{children}</body>
+        {children}
+      </body>
     </html>
   );
 }
