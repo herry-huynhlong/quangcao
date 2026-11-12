@@ -1,9 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '../../lib/api';
 
-export default function Verify() {
+function VerifyContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [state, setState] = useState(token ? 'Đang xác minh email…' : 'Liên kết xác minh không hợp lệ.');
@@ -18,4 +18,8 @@ export default function Verify() {
   }, [token]);
 
   return <main className="auth-page"><section className="card form"><h1>Xác minh email</h1><p>{state}</p></section></main>;
+}
+
+export default function Verify() {
+  return <Suspense fallback={<main className="auth-page"><section className="card form"><h1>Xác minh email</h1><p>Đang chuẩn bị xác minh email…</p></section></main>}><VerifyContent /></Suspense>;
 }
