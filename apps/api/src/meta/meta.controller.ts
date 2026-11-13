@@ -24,9 +24,11 @@ export class MetaController {
   @Post('ad-accounts/:id/select') @UseGuards(SessionGuard,SameOriginGuard) selectAccount(@CurrentUser() user:AuthenticatedUser,@Param('id') accountId:string){ return this.meta.selectAccount(user.id,accountId); }
   @Get('manager/config') @UseGuards(SessionGuard) managerConfig(){return this.meta.managerConfig();}
   @Get('manager/requests') @UseGuards(SessionGuard) managerRequests(@CurrentUser() user:AuthenticatedUser){return this.meta.managerRequests(user.id);}
+  @Get('assets') @UseGuards(SessionGuard) assets(@CurrentUser() user:AuthenticatedUser,@Query('type') type?:string){return this.meta.userAssets(user.id,type);}
   @Post('manager/requests') @UseGuards(SessionGuard,SameOriginGuard) requestManager(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerRequestDto){return this.meta.createManagerRequest(user.id,body.adAccountId);}
   @Post('manager/requests/:id/check') @UseGuards(SessionGuard,SameOriginGuard) checkManager(@CurrentUser() user:AuthenticatedUser,@Param('id') id:string){return this.meta.recheckManagerRequest(user.id,id);}
   @Get('manager/admin/status') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') managerAdminStatus(@CurrentUser() user:AuthenticatedUser){return this.meta.managerAdminStatus(user.id);}
+  @Get('manager/admin/assets') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') managerAdminAssets(@Query('page') page?:string,@Query('search') search?:string,@Query('status') status?:string){return this.meta.adminAssets(page,search,status);}
   @Get('partner/config') @UseGuards(SessionGuard) partnerConfig(){return this.meta.partnerConfig();}
   @Get('partner/requests') @UseGuards(SessionGuard) partnerRequests(@CurrentUser() user:AuthenticatedUser){return this.meta.partnerRequests(user.id);}
   @Post('partner/requests') @UseGuards(SessionGuard,SameOriginGuard) requestPartner(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerRequestDto){return this.meta.createPartnerRequest(user.id,body);}
