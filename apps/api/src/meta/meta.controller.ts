@@ -26,6 +26,7 @@ export class MetaController {
   @Get('manager/requests') @UseGuards(SessionGuard) managerRequests(@CurrentUser() user:AuthenticatedUser){return this.meta.managerRequests(user.id);}
   @Get('assets') @UseGuards(SessionGuard) assets(@CurrentUser() user:AuthenticatedUser,@Query('type') type?:string){return this.meta.userAssets(user.id,type);}
   @Post('manager/requests') @UseGuards(SessionGuard,SameOriginGuard) requestManager(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerRequestDto){return this.meta.createManagerRequest(user.id,body.adAccountId);}
+  @Post('manager/requests/:id/check') @UseGuards(SessionGuard,SameOriginGuard) checkManagerRequest(@CurrentUser() user:AuthenticatedUser,@Param('id') id:string){return this.meta.recheckManagerRequest(user.id,id);}
   @Post('manager/requests/:id/check') @UseGuards(SessionGuard,SameOriginGuard) checkManager(@CurrentUser() user:AuthenticatedUser,@Param('id') id:string){return this.meta.recheckManagerRequest(user.id,id);}
   @Get('manager/admin/status') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') managerAdminStatus(@CurrentUser() user:AuthenticatedUser){return this.meta.managerAdminStatus(user.id);}
   @Post('manager/admin/sync') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') syncManagerAssets(){return this.meta.syncManagedAssets();}
