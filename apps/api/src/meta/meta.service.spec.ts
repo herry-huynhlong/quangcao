@@ -9,7 +9,7 @@ describe('MetaService OAuth safety', () => {
     const db={query:jest.fn()}; const service=new MetaService(db as never); const encrypted=(service as never as {encrypt(value:string):string}).encrypt('app-secret');
     db.query.mockResolvedValueOnce({rows:[{client_id:'app-id',secret_encrypted:encrypted,api_version:'v27.0'}]}).mockResolvedValueOnce({rows:[]});
     const result=await service.start('00000000-0000-0000-0000-000000000001');
-    expect(result.authorizationUrl).toStartWith('https://www.facebook.com/v27.0/dialog/oauth?');
+    expect(result.authorizationUrl.startsWith('https://www.facebook.com/v27.0/dialog/oauth?')).toBe(true);
     expect(result.authorizationUrl).toContain('scope=ads_read');
     expect(result.authorizationUrl).toContain('redirect_uri=https%3A%2F%2Fads.qavio.site%2Fapi%2Fv1%2Fmeta%2Foauth%2Fcallback');
     expect(result.authorizationUrl).not.toContain('app-secret');
