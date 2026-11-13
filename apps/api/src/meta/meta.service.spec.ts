@@ -10,7 +10,7 @@ describe('MetaService OAuth safety', () => {
     db.query.mockResolvedValueOnce({rows:[{client_id:'app-id',secret_encrypted:encrypted,api_version:'v27.0'}]}).mockResolvedValueOnce({rows:[]});
     const result=await service.start('00000000-0000-0000-0000-000000000001');
     expect(result.authorizationUrl.startsWith('https://www.facebook.com/v27.0/dialog/oauth?')).toBe(true);
-    expect(result.authorizationUrl).toContain('scope=ads_read');
+    expect(result.authorizationUrl).toContain('scope=ads_read%2Cads_management');
     expect(result.authorizationUrl).toContain('redirect_uri=https%3A%2F%2Fads.qavio.site%2Fapi%2Fv1%2Fmeta%2Foauth%2Fcallback');
     expect(result.authorizationUrl).not.toContain('app-secret');
     expect(result.authorizationUrl).toMatch(/state=/);
@@ -19,7 +19,7 @@ describe('MetaService OAuth safety', () => {
   it('rejects a callback without a matching state before exchanging a code', async () => {
     const db={query:jest.fn(),transaction:jest.fn(async(fn:(client:{query:jest.Mock})=>Promise<unknown>)=>fn({query:jest.fn().mockResolvedValue({rows:[]})}))};
     const service=new MetaService(db as never);
-    await expect(service.callback('forged-state','authorization-code',undefined,undefined)).resolves.toEqual({redirect:'https://ads.qavio.site/admin/ads/meta?oauth=error'});
+    await expect(service.callback('forged-state','authorization-code',undefined,undefined)).resolves.toEqual({redirect:'https://ads.qavio.site/app/meta?oauth=error'});
     expect(db.query).not.toHaveBeenCalled();
   });
 

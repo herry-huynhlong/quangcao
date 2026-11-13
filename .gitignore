@@ -6,4 +6,8 @@ coverage
 .env.*.local
 !.env.example
 *.log
+*.log.err
+*.tsbuildinfo
+.pnpm-local-store/
+_tmp_*
 
