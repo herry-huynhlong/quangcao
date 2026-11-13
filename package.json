@@ -10,6 +10,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm --filter @qavio/api test",
     "test:e2e": "pnpm --filter @qavio/api test:e2e",
+    "smoke:assets": "node scripts/smoke-next-assets.mjs",
     "db:migrate": "pnpm --filter @qavio/api db:migrate"
   }
 }
