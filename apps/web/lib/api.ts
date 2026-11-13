@@ -20,7 +20,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   options.signal?.addEventListener('abort', abort, { once: true });
   let response: Response;
   try {
-    response = await fetch(`${apiOrigin}${path}`, { ...options, signal: controller.signal, credentials: 'include', headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) } });
+    const headers = new Headers(options.headers);
+    if (typeof options.body === 'string' && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+    response = await fetch(`${apiOrigin}${path}`, { ...options, signal: controller.signal, credentials: 'include', headers });
   } catch (error) {
     if (controller.signal.aborted) throw new ApiError('Yêu cầu mất quá lâu hoặc đã bị hủy. Vui lòng thử lại.', 0, 'TIMEOUT');
     throw new ApiError('Không thể kết nối máy chủ. Kiểm tra mạng rồi thử lại.', 0, 'NETWORK');
