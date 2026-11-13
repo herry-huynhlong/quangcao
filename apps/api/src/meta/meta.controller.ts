@@ -27,6 +27,7 @@ export class MetaController {
   @Post('partner/requests') @UseGuards(SessionGuard,SameOriginGuard) requestPartner(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerRequestDto){return this.meta.createPartnerRequest(user.id,body);}
   @Post('partner/requests/:id/check') @UseGuards(SessionGuard,SameOriginGuard) checkPartner(@CurrentUser() user:AuthenticatedUser,@Param('id') id:string){return this.meta.recheckPartnerRequest(user.id,id);}
   @Get('partner/admin/requests') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') adminPartnerRequests(){return this.meta.adminPartnerRequests();}
+  @Get('partner/admin/oauth/start') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') startPartnerAdminOAuth(@CurrentUser() user:AuthenticatedUser){return this.meta.start(user.id,'business_discovery');}
   @Get('partner/admin/businesses') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') partnerBusinesses(@CurrentUser() user:AuthenticatedUser){return this.meta.discoverPartnerBusinesses(user.id);}
   @Post('partner/admin/configure') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') configurePartner(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerConfigDto){return this.meta.configurePartner(user.id,body);}
   @Post('partner/admin/check') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') checkPartnerConfiguration(){return this.meta.checkPartnerConfiguration();}
