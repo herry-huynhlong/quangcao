@@ -28,9 +28,6 @@ services:
 
   api:
     image: ${QAVIO_ADS_API_IMAGE:-ghcr.io/herry-huynhlong/qavio-ads-api:latest}
-    build:
-      context: .
-      dockerfile: infrastructure/api.Dockerfile
     restart: unless-stopped
     env_file: .env
     environment:
@@ -48,11 +45,6 @@ services:
 
   web:
     image: ${QAVIO_ADS_WEB_IMAGE:-ghcr.io/herry-huynhlong/qavio-ads-web:latest}
-    build:
-      context: .
-      dockerfile: infrastructure/web.Dockerfile
-      args:
-        NEXT_PUBLIC_API_ORIGIN: ${NEXT_PUBLIC_API_ORIGIN}
     restart: unless-stopped
     environment:
       NODE_ENV: production
