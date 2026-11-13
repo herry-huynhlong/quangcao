@@ -25,6 +25,7 @@ export class MetaController {
   @Get('partner/config') @UseGuards(SessionGuard) partnerConfig(){return this.meta.partnerConfig();}
   @Get('partner/requests') @UseGuards(SessionGuard) partnerRequests(@CurrentUser() user:AuthenticatedUser){return this.meta.partnerRequests(user.id);}
   @Post('partner/requests') @UseGuards(SessionGuard,SameOriginGuard) requestPartner(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerRequestDto){return this.meta.createPartnerRequest(user.id,body);}
+  @Post('partner/requests/:id/check') @UseGuards(SessionGuard,SameOriginGuard) checkPartner(@CurrentUser() user:AuthenticatedUser,@Param('id') id:string){return this.meta.recheckPartnerRequest(user.id,id);}
   @Get('partner/admin/requests') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') adminPartnerRequests(){return this.meta.adminPartnerRequests();}
   @Post('partner/admin/configure') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') configurePartner(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerConfigDto){return this.meta.configurePartner(user.id,body);}
   @Post('partner/admin/requests/:id/verify') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') verifyPartner(@Param('id') id:string){return this.meta.verifyPartnerRequest(id);}
