@@ -23,7 +23,7 @@ describe('MetaService OAuth safety', () => {
   });
 
   it('reports an expired stored token instead of connected', async () => {
-    const db={query:jest.fn().mockResolvedValueOnce({rows:[{client_id:'app-id',secret_encrypted:'encrypted',api_version:'v27.0'}]}).mockResolvedValueOnce({rows:[{id:'connection',token_encrypted:'encrypted',token_subject_id:null,token_expires_at:new Date(Date.now()-1_000),granted_scopes:['ads_read'],status:'CONNECTED',last_checked_at:null,last_error:null,disconnected_at:null}]}).mockResolvedValueOnce({rows:[{pending:false}]}).mockResolvedValueOnce({rows:[]})};
+    const db={query:jest.fn().mockResolvedValueOnce({rows:[{client_id:'app-id',secret_encrypted:'encrypted',api_version:'v27.0'}]}).mockResolvedValueOnce({rows:[{id:'connection',token_encrypted:'encrypted',token_subject_id:null,token_expires_at:new Date(Date.now()-1_000),granted_scopes:['ads_read'],status:'CONNECTED',last_checked_at:null,last_error:null,disconnected_at:null}]}).mockResolvedValueOnce({rows:[]}).mockResolvedValueOnce({rows:[]})};
     const service=new MetaService(db as never); const status=await service.status('00000000-0000-0000-0000-000000000001');
     expect(status.connection.status).toBe('TOKEN_EXPIRED');
   });
