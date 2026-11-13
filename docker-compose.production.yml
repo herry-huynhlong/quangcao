@@ -29,6 +29,7 @@ services:
   api:
     image: ${QAVIO_ADS_API_IMAGE:-ghcr.io/herry-huynhlong/qavio-ads-api:latest}
     restart: unless-stopped
+    command: ["sh", "-c", "cd apps/api && node dist/database/migrate.js && cd ../.. && node apps/api/dist/main.js"]
     env_file: .env
     environment:
       NODE_ENV: production

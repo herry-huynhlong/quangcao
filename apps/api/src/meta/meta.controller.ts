@@ -9,7 +9,7 @@ import { MetaService } from './meta.service';
 import { Roles } from '../common/roles.decorator';
 import { RolesGuard } from '../common/roles.guard';
 class PartnerRequestDto { @IsString() adAccountId!:string; @IsOptional() @IsString() pageId?:string; @IsOptional() @IsString() instagramAccountId?:string; }
-class PartnerConfigDto { @IsString() businessPortfolioId!:string; @IsOptional() @IsString() systemUserToken?:string; }
+class PartnerConfigDto { @IsString() businessPortfolioId!:string; @IsOptional() @IsString() businessPortfolioName?:string; @IsOptional() @IsString() systemUserToken?:string; }
 
 @Controller('v1/meta')
 export class MetaController {
@@ -27,6 +27,7 @@ export class MetaController {
   @Post('partner/requests') @UseGuards(SessionGuard,SameOriginGuard) requestPartner(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerRequestDto){return this.meta.createPartnerRequest(user.id,body);}
   @Post('partner/requests/:id/check') @UseGuards(SessionGuard,SameOriginGuard) checkPartner(@CurrentUser() user:AuthenticatedUser,@Param('id') id:string){return this.meta.recheckPartnerRequest(user.id,id);}
   @Get('partner/admin/requests') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') adminPartnerRequests(){return this.meta.adminPartnerRequests();}
+  @Get('partner/admin/businesses') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') partnerBusinesses(@CurrentUser() user:AuthenticatedUser){return this.meta.discoverPartnerBusinesses(user.id);}
   @Post('partner/admin/configure') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') configurePartner(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerConfigDto){return this.meta.configurePartner(user.id,body);}
   @Post('partner/admin/check') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') checkPartnerConfiguration(){return this.meta.checkPartnerConfiguration();}
   @Post('partner/admin/requests/:id/verify') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') verifyPartner(@Param('id') id:string){return this.meta.verifyPartnerRequest(id);}
