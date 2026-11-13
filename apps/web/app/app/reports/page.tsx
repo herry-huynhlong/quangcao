@@ -1,0 +1,1 @@
+export default function Reports(){return <main className="content"><p className="eyebrow">BÁO CÁO</p><h1 className="page-title">Hiệu quả quảng cáo</h1><section className="empty-state"><h2>Chưa có dữ liệu Meta</h2><p>Insights sẽ xuất hiện tại đây sau khi chiến dịch được tạo trên Meta và API trả dữ liệu thực.</p></section></main>}
