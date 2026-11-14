@@ -52,7 +52,7 @@ export class MetaService implements OnModuleInit, OnModuleDestroy {
   async managerOnboarding(userId:string){
     await this.expireManagerSessions(userId);
     let session=(await this.db.query(`SELECT id,status,expires_at,last_checked_at,last_error,completed_at FROM meta_manager_connection_sessions WHERE user_id=$1 ORDER BY created_at DESC LIMIT 1`,[userId])).rows[0]??null;
-    if(session&&['PENDING_OAUTH','WAITING_FOR_META'].includes(session.status)){const connection=await this.connection(userId);if(connection?.status==='CONNECTED'){try{await this.syncManagedAssets();await this.completeManagerSession(userId,session.id);}catch{/* status endpoint reports the retained session */}session=(await this.db.query(`SELECT id,status,expires_at,last_checked_at,last_error,completed_at FROM meta_manager_connection_sessions WHERE id=$1`,[session.id])).rows[0]??session;}}
+    if(session&&['PENDING_OAUTH','WAITING_FOR_META'].includes(session.status)){try{await this.syncManagedAssets();const connection=await this.connection(userId);if(connection?.status==='CONNECTED')await this.completeManagerSession(userId,session.id);else await this.db.query(`UPDATE meta_manager_connection_sessions SET status='WAITING_FOR_META',last_checked_at=now(),last_error='Đã kiểm tra quyền Facebook Admin. QAVIO cần bằng chứng ủy quyền Meta của USER để gắn đúng tài sản.',updated_at=now() WHERE id=$1`,[session.id]);}catch(error){const message=error instanceof Error?error.message:'Không thể kiểm tra quyền Meta lúc này.';await this.db.query(`UPDATE meta_manager_connection_sessions SET status='WAITING_FOR_META',last_checked_at=now(),last_error=$1,updated_at=now() WHERE id=$2`,[message,session.id]);}session=(await this.db.query(`SELECT id,status,expires_at,last_checked_at,last_error,completed_at FROM meta_manager_connection_sessions WHERE id=$1`,[session.id])).rows[0]??session;}
     const assets=await this.userAssets(userId);
     return {session,assets,requests:await this.managerRequests(userId)};
   }
@@ -60,8 +60,8 @@ export class MetaService implements OnModuleInit, OnModuleDestroy {
     await this.expireManagerSessions(userId);
     const existing=await this.db.query<{id:string;status:string}>(`SELECT id,status FROM meta_manager_connection_sessions WHERE user_id=$1 AND status IN ('PENDING_OAUTH','WAITING_FOR_META') AND expires_at>now() ORDER BY created_at DESC LIMIT 1`,[userId]);
     const session=existing.rows[0]??(await this.db.query<{id:string;status:string}>(`INSERT INTO meta_manager_connection_sessions(user_id) VALUES($1) RETURNING id,status`,[userId])).rows[0];
-    const oauth=await this.start(userId,'default',session.id);
-    return {sessionId:session.id,authorizationUrl:oauth.authorizationUrl};
+    await this.db.query(`UPDATE meta_manager_connection_sessions SET status='WAITING_FOR_META',last_checked_at=now(),last_error=NULL,updated_at=now() WHERE id=$1`,[session.id]);
+    return {sessionId:session.id,method:'ADMIN_MANAGED'};
   }
   private async expireManagerSessions(userId:string){await this.db.query(`UPDATE meta_manager_connection_sessions SET status='EXPIRED',last_error='Phiên kết nối đã hết hạn. Hãy bắt đầu lại.',updated_at=now() WHERE user_id=$1 AND expires_at<=now() AND status IN ('PENDING_OAUTH','WAITING_FOR_META')`,[userId]);}
   private async completeManagerSession(userId:string,sessionId:string){
