@@ -85,6 +85,19 @@ export default function MetaManager() {
     }
   }
 
+  async function refreshConnection() {
+    setBusy(true);
+    setError('');
+    try {
+      await api('/v1/meta/manager/refresh', { method: 'POST' });
+      await load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Không thể tải lại trạng thái kết nối.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const connected = items.filter((item) => item.status === 'CONNECTED');
   const pending = items.filter((item) => item.status !== 'CONNECTED');
   const canAddRequest = !pending.some((item) => item.status === 'PENDING_VERIFICATION');
@@ -115,13 +128,14 @@ export default function MetaManager() {
 
     <section className="card" style={{ marginTop: 16 }}>
       <h2>Kiểm tra và liên kết</h2>
-      <p className="muted">QAVIO không tự gán một Ad Account chỉ vì Facebook Admin nhìn thấy nó. Một lần xác nhận OAuth của đúng USER QAVIO là bằng chứng để ngăn người khác chiếm tài sản.</p>
+      <p className="muted">Bấm tải lại sau khi Facebook xác nhận lời mời. QAVIO kiểm tra quyền Trang và Ad Account thực tế, sau đó cập nhật ngay danh sách bên dưới.</p>
+      <button className="button secondary" disabled={busy} onClick={() => void refreshConnection()}>{busy ? 'Đang tải lại…' : 'Tải lại trạng thái kết nối'}</button>
       {canAddRequest && !reveal && <button className="button" disabled={!config?.ready} onClick={() => setReveal(true)}>Tôi đã cấp quyền — Khai báo Ad Account</button>}
       {reveal && <form className="form" onSubmit={submit}><label>Ad Account ID đã cấp quyền<input name="adAccountId" required inputMode="numeric" placeholder="Ví dụ: 123456789" /></label><button className="button" disabled={busy}>{busy ? 'Đang kiểm tra…' : 'Kiểm tra kết nối'}</button></form>}
       {pending.map((item) => <div className="status-row" key={item.id}>
-        <span><b>Ad Account {item.ad_account_id}</b>{item.last_error && <><br /><small>{item.last_error}</small></>}{item.status === 'NEEDS_USER_OAUTH' && <><br /><small>Đây là bước xác minh một lần cho đúng USER đang dùng QAVIO, không phải yêu cầu cấp quyền Facebook Admin lại.</small></>}</span>
+        <span><b>Ad Account {item.ad_account_id}</b>{item.last_error && <><br /><small>{item.last_error}</small></>}{item.status === 'NEEDS_USER_OAUTH' && <><br /><small>QAVIO chưa có bằng chứng liên kết tài khoản này với USER hiện tại. Không thể tự gán tài sản chỉ từ Account ID.</small></>}</span>
         <b>{labels[item.status] ?? item.status}</b>
-        {item.status === 'NEEDS_USER_OAUTH' ? <Link className="button secondary" href="/app/meta/oauth">Liên kết Facebook một lần</Link> : <button className="button secondary" disabled={checkingId === item.id} onClick={() => void checkNow(item.id)}>{checkingId === item.id ? 'Đang kiểm tra…' : 'Kiểm tra ngay'}</button>}
+        <button className="button secondary" disabled={checkingId === item.id} onClick={() => void checkNow(item.id)}>{checkingId === item.id ? 'Đang kiểm tra…' : 'Kiểm tra ngay'}</button>
       </div>)}
     </section>
 
