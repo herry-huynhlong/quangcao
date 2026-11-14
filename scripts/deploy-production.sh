@@ -13,3 +13,17 @@ export QAVIO_ADS_WEB_IMAGE="ghcr.io/herry-huynhlong/qavio-ads-web:sha-${revision
 docker compose -f docker-compose.production.yml pull
 docker compose -f docker-compose.production.yml up -d --remove-orphans
 docker compose -f docker-compose.production.yml ps
+
+# Keep only the QAVIO API/Web images used by this release.  This deliberately
+# does not prune volumes, containers, build cache, or images from other apps.
+active_images="$(docker compose -f docker-compose.production.yml images -q | sort -u)"
+docker image ls --format '{{.Repository}} {{.ID}}' | while read -r repository image_id; do
+  case "$repository" in
+    ghcr.io/herry-huynhlong/qavio-ads-api|ghcr.io/herry-huynhlong/qavio-ads-web)
+      case " $active_images " in
+        *" $image_id "*) ;;
+        *) docker image rm "$image_id" >/dev/null 2>&1 || true ;;
+      esac
+      ;;
+  esac
+done
