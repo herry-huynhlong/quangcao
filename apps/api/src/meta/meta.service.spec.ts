@@ -28,4 +28,12 @@ describe('MetaService OAuth safety', () => {
     const service=new MetaService(db as never); const status=await service.status('00000000-0000-0000-0000-000000000001');
     expect(status.connection.status).toBe('TOKEN_EXPIRED');
   });
+
+  it('keeps an active Admin connection connected when an unused OAuth state is pending', async () => {
+    const future=new Date(Date.now()+60_000);
+    const db={query:jest.fn().mockResolvedValueOnce({rows:[{client_id:'app-id',secret_encrypted:'encrypted',api_version:'v27.0'}]}).mockResolvedValueOnce({rows:[{id:'connection',token_encrypted:'encrypted',token_subject_id:null,token_expires_at:future,granted_scopes:['ads_read'],status:'CONNECTED',last_checked_at:null,last_error:null,disconnected_at:null}]}).mockResolvedValueOnce({rows:[{expires_at:future}]}).mockResolvedValueOnce({rows:[]})};
+    const service=new MetaService(db as never); const status=await service.status('00000000-0000-0000-0000-000000000001');
+    expect(status.connection.status).toBe('CONNECTED');
+    expect(status.connection.hasPendingOAuth).toBe(true);
+  });
 });

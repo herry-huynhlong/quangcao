@@ -9,7 +9,8 @@ import { MetaService } from './meta.service';
 import { Roles } from '../common/roles.decorator';
 import { RolesGuard } from '../common/roles.guard';
 class PartnerRequestDto { @IsString() adAccountId!:string; @IsOptional() @IsString() pageId?:string; @IsOptional() @IsString() instagramAccountId?:string; }
-class PartnerConfigDto { @IsString() businessPortfolioId!:string; @IsOptional() @IsString() businessPortfolioName?:string; @IsOptional() @IsString() systemUserToken?:string; }
+class PartnerConfigDto { @IsString() businessPortfolioId!:string; @IsOptional() @IsString() businessPortfolioName?:string; @IsOptional() @IsString() systemUserToken?:string; @IsOptional() @IsString() defaultAdAccountId?:string; }
+class PartnerPageRequestDto { @IsString() pageId!:string; }
 
 @Controller('v1/meta')
 export class MetaController {
@@ -23,6 +24,7 @@ export class MetaController {
   @Post('disconnect') @UseGuards(SessionGuard,SameOriginGuard) disconnect(@CurrentUser() user:AuthenticatedUser){ return this.meta.disconnect(user.id); }
   @Post('ad-accounts/:id/select') @UseGuards(SessionGuard,SameOriginGuard) selectAccount(@CurrentUser() user:AuthenticatedUser,@Param('id') accountId:string){ return this.meta.selectAccount(user.id,accountId); }
   @Get('manager/config') @UseGuards(SessionGuard) managerConfig(){return this.meta.managerConfig();}
+  @Get('manager/partner-config') @UseGuards(SessionGuard) managerPartnerConfig(){return this.meta.managerPartnerConfig();}
   @Get('manager/onboarding') @UseGuards(SessionGuard) managerOnboarding(@CurrentUser() user:AuthenticatedUser){return this.meta.managerOnboarding(user.id);}
   @Post('manager/onboarding/start') @UseGuards(SessionGuard,SameOriginGuard) startManagerOnboarding(@CurrentUser() user:AuthenticatedUser){return this.meta.startManagerOnboarding(user.id);}
   @Get('manager/requests') @UseGuards(SessionGuard) managerRequests(@CurrentUser() user:AuthenticatedUser){return this.meta.managerRequests(user.id);}
@@ -30,6 +32,9 @@ export class MetaController {
   @Post('manager/requests') @UseGuards(SessionGuard,SameOriginGuard) requestManager(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerRequestDto){return this.meta.createManagerRequest(user.id,body.adAccountId);}
   @Post('manager/refresh') @UseGuards(SessionGuard,SameOriginGuard) refreshManager(@CurrentUser() user:AuthenticatedUser){return this.meta.refreshManager(user.id);}
   @Post('manager/requests/:id/check') @UseGuards(SessionGuard,SameOriginGuard) checkManagerRequest(@CurrentUser() user:AuthenticatedUser,@Param('id') id:string){return this.meta.recheckManagerRequest(user.id,id);}
+  @Get('manager/page-requests') @UseGuards(SessionGuard) managerPageRequests(@CurrentUser() user:AuthenticatedUser){return this.meta.managerPageRequests(user.id);}
+  @Post('manager/page-requests') @UseGuards(SessionGuard,SameOriginGuard) createManagerPageRequest(@CurrentUser() user:AuthenticatedUser,@Body() body:PartnerPageRequestDto){return this.meta.createManagerPageRequest(user.id,body.pageId);}
+  @Post('manager/page-requests/:id/check') @UseGuards(SessionGuard,SameOriginGuard) checkManagerPageRequest(@CurrentUser() user:AuthenticatedUser,@Param('id') id:string){return this.meta.recheckManagerPageRequest(user.id,id);}
   @Get('manager/admin/status') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') managerAdminStatus(@CurrentUser() user:AuthenticatedUser){return this.meta.managerAdminStatus(user.id);}
   @Post('manager/admin/sync') @UseGuards(SessionGuard,RolesGuard,SameOriginGuard) @Roles('SUPER_ADMIN') syncManagerAssets(){return this.meta.syncManagedAssets();}
   @Get('manager/admin/assets') @UseGuards(SessionGuard,RolesGuard) @Roles('SUPER_ADMIN') managerAdminAssets(@Query('page') page?:string,@Query('search') search?:string,@Query('status') status?:string){return this.meta.adminAssets(page,search,status);}
