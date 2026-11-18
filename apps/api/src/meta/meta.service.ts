@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException, OnModuleDestroy, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
 import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { DatabaseService } from '../database/database.service';
 
@@ -15,6 +15,7 @@ type BusinessResponse={data?:{id?:string;name?:string}[]}&GraphError;
 @Injectable()
 export class MetaService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly db:DatabaseService) {}
+  private readonly logger=new Logger(MetaService.name);
   private managedSyncTimer:ReturnType<typeof setInterval>|null=null;
   onModuleInit(){this.managedSyncTimer=setInterval(()=>{void this.syncManagedAssets().catch(()=>undefined);void this.syncManagerPageConnections().catch(()=>undefined);},5*60_000);void this.syncManagedAssets().catch(()=>undefined);void this.syncManagerPageConnections().catch(()=>undefined);}
   onModuleDestroy(){if(this.managedSyncTimer)clearInterval(this.managedSyncTimer);}
@@ -197,10 +198,13 @@ export class MetaService implements OnModuleInit, OnModuleDestroy {
       const config=await this.config();if(!config)throw new BadRequestException('Meta App chưa được cấu hình.');
       const short=await this.graph<TokenResponse>(config.version,'oauth/access_token',{client_id:config.clientId,client_secret:config.secret,redirect_uri:this.redirectUri(),code});if(!short.access_token)throw new BadRequestException('Meta không trả về access token.');
       const long=await this.graph<TokenResponse>(config.version,'oauth/access_token',{grant_type:'fb_exchange_token',client_id:config.clientId,client_secret:config.secret,fb_exchange_token:short.access_token});const token=long.access_token??short.access_token;
-      const debug=await this.verifiedToken(config,token);if(!debug.data?.is_valid)throw new BadRequestException('Meta token không hợp lệ.');
+      const debug=await this.verifiedToken(config,token);if(!debug.data?.is_valid)throw new BadRequestException('Meta token không hợp lệ.');if(debug.data.app_id!==config.clientId)throw new BadRequestException('Không xác minh được token thuộc đúng Meta App đang cấu hình cho QAVIO.');
       const expiresAt=debug.data.expires_at?new Date(debug.data.expires_at*1000):(long.expires_in?new Date(Date.now()+long.expires_in*1000):null);const scopes=await this.permissions(config,token);
       if(consumed.oauthMode==='PAGE'){
         if(!scopes.includes('pages_show_list')){await this.upsertPageConnection(userId,token,debug.data.user_id??null,expiresAt,scopes,'MISSING_PERMISSION','pages_show_list was not granted');return {redirect:this.safeRedirect('error',returnPath)};}
+        // Do not mark OAuth as connected until the user token can actually read the Page list.
+        // This catches app/permission mismatches before the UI reports a successful connection.
+        await this.graph<{data?:{id?:string}[]}>(config.version,'me/accounts',{fields:'id',limit:'1',access_token:token});
         const pageConnection=await this.upsertPageConnection(userId,token,debug.data.user_id??null,expiresAt,scopes,'CONNECTED',null);
         await this.db.query(`INSERT INTO audit_logs(actor_type,actor_id,action,entity,entity_id,reason) VALUES('USER',$1,'META_PAGE_OAUTH_CONNECTED','meta_page_oauth_connection',$2,'Page access OAuth token encrypted at rest')`,[userId,pageConnection.id]);
         return {redirect:this.safeRedirect('success',returnPath)};
@@ -210,8 +214,10 @@ export class MetaService implements OnModuleInit, OnModuleDestroy {
       if(managerSessionId){try{await this.syncManagedAssets();await this.completeManagerSession(userId,managerSessionId);}catch{/* Page access is still verified by its own onboarding request. */}}
       await this.db.query(`INSERT INTO audit_logs(actor_type,actor_id,action,entity,entity_id,reason) VALUES('USER',$1,'META_OAUTH_CONNECTED','meta_connection',$2,'OAuth completed; token encrypted at rest')`,[userId,saved.id]);
       return {redirect:this.safeRedirect('success',returnPath)};
-    }catch{
+    }catch(error){
       if(managerSessionId)await this.db.query(`UPDATE meta_manager_connection_sessions SET status='FAILED',last_error='Không thể hoàn tất OAuth Meta. Vui lòng thử lại.',updated_at=now() WHERE id=$1`,[managerSessionId]);
+      // Never log Graph request URLs, tokens, secrets, or raw fetch exceptions.
+      this.logger.warn(`Meta OAuth callback failed for user ${userId}; category=${error instanceof BadRequestException?'PROVIDER_OR_PERMISSION_REJECTED':'INTERNAL_OR_NETWORK_ERROR'}`);
       await this.db.query(`INSERT INTO audit_logs(actor_type,actor_id,action,entity,reason) VALUES('USER',$1,'META_OAUTH_FAILED','meta_connection','OAuth callback failed without persisting secrets')`,[userId]);
       return {redirect:this.safeRedirect('error',returnPath)};
     }

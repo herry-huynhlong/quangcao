@@ -36,4 +36,44 @@ describe('MetaService OAuth safety', () => {
     expect(status.connection.status).toBe('CONNECTED');
     expect(status.connection.hasPendingOAuth).toBe(true);
   });
+
+  it('rejects a Page OAuth token issued to a different configured Meta App', async () => {
+    const db={query:jest.fn().mockResolvedValue({rows:[]})}; const service=new MetaService(db as never); const internals=service as never as Record<string,jest.Mock>;
+    jest.spyOn(internals,'consumeState').mockResolvedValue({userId:'user-a',managerSessionId:null,returnPath:'META_MANAGER',oauthMode:'PAGE'});
+    jest.spyOn(internals,'config').mockResolvedValue({clientId:'qavio-app',secret:'server-secret',version:'v27.0'});
+    jest.spyOn(internals,'graph').mockResolvedValueOnce({access_token:'short-token'}).mockResolvedValueOnce({access_token:'long-token'});
+    jest.spyOn(internals,'verifiedToken').mockResolvedValue({data:{is_valid:true,app_id:'another-app',user_id:'meta-user'}});
+    const saved=jest.spyOn(internals,'upsertPageConnection');
+
+    await expect(service.callback('state','code',undefined,undefined)).resolves.toEqual({redirect:'https://ads.qavio.site/app/meta/manager?oauth=error'});
+    expect(saved).not.toHaveBeenCalled();
+    expect(db.query).toHaveBeenCalledWith(expect.stringContaining('META_OAUTH_FAILED'),expect.any(Array));
+  });
+
+  it('verifies the Page list through Graph API before saving Page OAuth as connected', async () => {
+    const db={query:jest.fn().mockResolvedValue({rows:[]})}; const service=new MetaService(db as never); const internals=service as never as Record<string,jest.Mock>;
+    jest.spyOn(internals,'consumeState').mockResolvedValue({userId:'user-a',managerSessionId:null,returnPath:'META_MANAGER',oauthMode:'PAGE'});
+    jest.spyOn(internals,'config').mockResolvedValue({clientId:'qavio-app',secret:'server-secret',version:'v27.0'});
+    const graph=jest.spyOn(internals,'graph').mockResolvedValueOnce({access_token:'short-token'}).mockResolvedValueOnce({access_token:'long-token'}).mockResolvedValueOnce({data:[]});
+    jest.spyOn(internals,'verifiedToken').mockResolvedValue({data:{is_valid:true,app_id:'qavio-app',user_id:'meta-user',expires_at:1_900_000_000}});
+    jest.spyOn(internals,'permissions').mockResolvedValue(['pages_show_list','pages_read_engagement']);
+    const saved=jest.spyOn(internals,'upsertPageConnection').mockResolvedValue({id:'page-connection'});
+
+    await expect(service.callback('state','code',undefined,undefined)).resolves.toEqual({redirect:'https://ads.qavio.site/app/meta/manager?oauth=success'});
+    expect(graph).toHaveBeenLastCalledWith('v27.0','me/accounts',{fields:'id',limit:'1',access_token:'long-token'});
+    expect(saved).toHaveBeenCalledWith('user-a','long-token','meta-user',expect.any(Date),['pages_show_list','pages_read_engagement'],'CONNECTED',null);
+  });
+
+  it('does not save Page OAuth when the Meta Page-list preflight fails', async () => {
+    const db={query:jest.fn().mockResolvedValue({rows:[]})}; const service=new MetaService(db as never); const internals=service as never as Record<string,jest.Mock>;
+    jest.spyOn(internals,'consumeState').mockResolvedValue({userId:'user-a',managerSessionId:null,returnPath:'META_MANAGER',oauthMode:'PAGE'});
+    jest.spyOn(internals,'config').mockResolvedValue({clientId:'qavio-app',secret:'server-secret',version:'v27.0'});
+    jest.spyOn(internals,'graph').mockResolvedValueOnce({access_token:'short-token'}).mockResolvedValueOnce({access_token:'long-token'}).mockRejectedValueOnce(new Error('Meta denied pages list'));
+    jest.spyOn(internals,'verifiedToken').mockResolvedValue({data:{is_valid:true,app_id:'qavio-app',user_id:'meta-user'}});
+    jest.spyOn(internals,'permissions').mockResolvedValue(['pages_show_list']);
+    const saved=jest.spyOn(internals,'upsertPageConnection');
+
+    await expect(service.callback('state','code',undefined,undefined)).resolves.toEqual({redirect:'https://ads.qavio.site/app/meta/manager?oauth=error'});
+    expect(saved).not.toHaveBeenCalled();
+  });
 });
