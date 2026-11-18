@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 
-const groups: [string, string[][]][] = [['TỔNG QUAN', [['Dashboard', '/admin']]], ['KHÁCH HÀNG', [['Quản lý người dùng', '/admin/users']]], ['QUẢNG CÁO', [['Facebook & Instagram Ads', '/admin/ads/meta'], ['Yêu cầu thiết lập quảng cáo', '/admin/ads/meta/requests'], ['Google & YouTube Ads', '/admin/ads/google'], ['TikTok Ads', '/admin/ads/tiktok']]], ['TÀI CHÍNH', [['Cấu hình phí dịch vụ', '/admin/finance/fees']]], ['BẢO MẬT', [['Quản trị viên', '/admin/security'], ['Quản lý phiên', '/admin/sessions'], ['Nhật ký hoạt động', '/admin/audit']]], ['CẤU HÌNH', [['Cấu hình hệ thống', '/admin/settings'], ['Kết nối API', '/admin/integrations']]]];
+const groups: [string, string[][]][] = [['TỔNG QUAN', [['Dashboard', '/admin']]], ['KHÁCH HÀNG', [['Quản lý người dùng', '/admin/users']]], ['QUẢNG CÁO', [['Facebook & Instagram Ads', '/admin/ads/meta'], ['Chiến dịch khách hàng', '/admin/ads/meta/requests'], ['Yêu cầu hỗ trợ thủ công', '/admin/ads/meta/support'], ['Google & YouTube Ads', '/admin/ads/google'], ['TikTok Ads', '/admin/ads/tiktok']]], ['TÀI CHÍNH', [['Cấu hình phí dịch vụ', '/admin/finance/fees']]], ['BẢO MẬT', [['Quản trị viên', '/admin/security'], ['Quản lý phiên', '/admin/sessions'], ['Nhật ký hoạt động', '/admin/audit']]], ['CẤU HÌNH', [['Cấu hình hệ thống', '/admin/settings'], ['Kết nối API', '/admin/integrations']]]];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false); const [expired, setExpired] = useState(false); const path = usePathname(); const router = useRouter();

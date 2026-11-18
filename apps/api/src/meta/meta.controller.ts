@@ -24,6 +24,9 @@ export class MetaController {
   @Post('disconnect') @UseGuards(SessionGuard,SameOriginGuard) disconnect(@CurrentUser() user:AuthenticatedUser){ return this.meta.disconnect(user.id); }
   @Post('ad-accounts/:id/select') @UseGuards(SessionGuard,SameOriginGuard) selectAccount(@CurrentUser() user:AuthenticatedUser,@Param('id') accountId:string){ return this.meta.selectAccount(user.id,accountId); }
   @Get('manager/config') @UseGuards(SessionGuard) managerConfig(){return this.meta.managerConfig();}
+  @Get('manager/page-options') @UseGuards(SessionGuard) managerPageOptions(@CurrentUser() user:AuthenticatedUser){return this.meta.managerPageOptions(user.id);}
+  @Get('manager/pages/oauth/start') @UseGuards(SessionGuard) startPageAccessOAuth(@CurrentUser() user:AuthenticatedUser){return this.meta.start(user.id,'page_access',undefined,'META_MANAGER');}
+  @Post('manager/pages/oauth/disconnect') @UseGuards(SessionGuard,SameOriginGuard) disconnectPageAccessOAuth(@CurrentUser() user:AuthenticatedUser){return this.meta.disconnectManagerPageOAuth(user.id);}
   @Get('manager/partner-config') @UseGuards(SessionGuard) managerPartnerConfig(){return this.meta.managerPartnerConfig();}
   @Get('manager/onboarding') @UseGuards(SessionGuard) managerOnboarding(@CurrentUser() user:AuthenticatedUser){return this.meta.managerOnboarding(user.id);}
   @Post('manager/onboarding/start') @UseGuards(SessionGuard,SameOriginGuard) startManagerOnboarding(@CurrentUser() user:AuthenticatedUser){return this.meta.startManagerOnboarding(user.id);}
